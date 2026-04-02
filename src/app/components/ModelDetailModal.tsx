@@ -115,6 +115,42 @@ export function ModelDetailModal({ model, open, onOpenChange }: ModelDetailModal
             </div>
           )}
           
+          {/* Pricing */}
+          {(model.inputPricing || model.outputPricing || model.contextWindow || model.maxOutputTokens) && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <h3 className="font-semibold">Pricing & Specs</h3>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                  {model.inputPricing && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Input Pricing</span>
+                      <span className="font-medium">{model.inputPricing}</span>
+                    </div>
+                  )}
+                  {model.outputPricing && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Output Pricing</span>
+                      <span className="font-medium">{model.outputPricing}</span>
+                    </div>
+                  )}
+                  {model.contextWindow && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Context Window</span>
+                      <span className="font-medium">{model.contextWindow.toLocaleString()} tokens</span>
+                    </div>
+                  )}
+                  {model.maxOutputTokens && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Max Output</span>
+                      <span className="font-medium">{model.maxOutputTokens.toLocaleString()} tokens</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
           {/* Additional Info */}
           <div className="space-y-3">
             <h3 className="font-semibold">Additional Information</h3>
