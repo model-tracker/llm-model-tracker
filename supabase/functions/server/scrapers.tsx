@@ -78,9 +78,118 @@ function supabase() {
 
 const NOW = new Date().toISOString();
 
-// ─── Curated model catalogue ──────────────────────────────────────────────────
+// ─── Live API fetchers ────────────────────────────────────────────────────────
 
-function buildModels(): ModelData[] {
+// Infer capabilities from model id/name
+function inferCapabilities(id: string, name: string): string[] {
+  const s = (id + ' ' + name).toLowerCase();
+  const caps: string[] = ['Text'];
+  if (s.includes('vision') || s.includes('vl') || s.includes('gemini') || s.includes('gpt-4') || s.includes('claude') || s.includes('grok')) caps.push('Vision');
+  if (!s.includes('whisper') && !s.includes('tts') && !s.includes('dall') && !s.includes('embed')) caps.push('Function Calling');
+  if (s.includes('agent') || s.includes('o1') || s.includes('o3') || s.includes('o4') || s.includes('gemini') || s.includes('claude')) caps.push('Agents');
+  return [...new Set(caps)];
+}
+
+// Fetch live models from OpenAI API
+async function fetchOpenAIModels(): Promise<Omit<ModelData, 'lastUpdated' | 'daysUntilDeprecation'>[]> {
+  const apiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!apiKey) { console.warn('OPENAI_API_KEY not set, skipping live fetch'); return []; }
+
+  const res = await fetch('https://api.openai.com/v1/models', {
+    headers: { 'Authorization': `Bearer ${apiKey}` },
+  });
+  if (!res.ok) { console.error('OpenAI API error:', res.status); return []; }
+
+  const { data } = await res.json() as { data: { id: string; created: number; owned_by: string }[] };
+
+  // Filter to user-facing chat/completion models only
+  const keep = /^(gpt|o1|o3|o4|chatgpt)/;
+  const skip = /instruct|vision-preview|0301|0314|0613|0125|research|realtime|audio|search|tts|whisper|dall|embed|moderat/;
+
+  return data
+    .filter(m => keep.test(m.id) && !skip.test(m.id))
+    .map(m => {
+      const releaseDate = new Date(m.created * 1000).toISOString().split('T')[0];
+      return {
+        id: `openai-${m.id.replace(/[^a-z0-9]/g, '-')}`,
+        name: m.id,
+        provider: 'OpenAI',
+        releaseDate,
+        status: 'active' as const,
+        capabilities: inferCapabilities(m.id, m.id),
+        sourceUrl: 'https://platform.openai.com/docs/models',
+      };
+    });
+}
+
+// Fetch live models from Anthropic API
+async function fetchAnthropicModels(): Promise<Omit<ModelData, 'lastUpdated' | 'daysUntilDeprecation'>[]> {
+  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!apiKey) { console.warn('ANTHROPIC_API_KEY not set, skipping live fetch'); return []; }
+
+  const res = await fetch('https://api.anthropic.com/v1/models', {
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+  });
+  if (!res.ok) { console.error('Anthropic API error:', res.status); return []; }
+
+  const { data } = await res.json() as { data: { id: string; display_name: string; created_at: string }[] };
+
+  return data.map(m => ({
+    id: `anthropic-${m.id.replace(/[^a-z0-9]/g, '-')}`,
+    name: m.display_name,
+    provider: 'Anthropic',
+    releaseDate: m.created_at.split('T')[0],
+    status: 'active' as const,
+    capabilities: inferCapabilities(m.id, m.display_name),
+    sourceUrl: 'https://docs.anthropic.com/en/docs/about-claude/models/overview',
+  }));
+}
+
+// Fetch live models from Google Gemini API
+async function fetchGeminiModels(): Promise<Omit<ModelData, 'lastUpdated' | 'daysUntilDeprecation'>[]> {
+  const apiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!apiKey) { console.warn('GEMINI_API_KEY not set, skipping live fetch'); return []; }
+
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+  if (!res.ok) { console.error('Gemini API error:', res.status); return []; }
+
+  const { models } = await res.json() as {
+    models: {
+      name: string;
+      displayName: string;
+      description?: string;
+      inputTokenLimit?: number;
+      outputTokenLimit?: number;
+    }[]
+  };
+
+  const keep = /gemini/;
+  const skip = /embedding|retrieval|aqa|legacy/;
+
+  return models
+    .filter(m => keep.test(m.name) && !skip.test(m.name))
+    .map(m => {
+      const shortId = m.name.replace('models/', '');
+      return {
+        id: `google-${shortId.replace(/[^a-z0-9]/g, '-')}`,
+        name: m.displayName,
+        provider: 'Google',
+        releaseDate: '2024-01-01', // Gemini API doesn't expose release dates
+        status: 'active' as const,
+        contextWindow: m.inputTokenLimit,
+        maxOutputTokens: m.outputTokenLimit,
+        capabilities: inferCapabilities(shortId, m.displayName),
+        sourceUrl: 'https://ai.google.dev/gemini-api/docs/models',
+      };
+    });
+}
+
+// ─── Curated model catalogue (used as base + fallback) ────────────────────────
+
+function buildCuratedModels(): Omit<ModelData, 'lastUpdated' | 'daysUntilDeprecation'>[] {
   const models: Omit<ModelData, 'lastUpdated' | 'daysUntilDeprecation'>[] = [
 
     // OpenAI
@@ -151,6 +260,62 @@ function buildModels(): ModelData[] {
   ];
 
   return models.map(m => ({
+    ...m,
+    lastUpdated: NOW,
+    daysUntilDeprecation: daysUntil(m.deprecationDate),
+  }));
+}
+
+// ─── Merge live API data with curated catalogue ───────────────────────────────
+// Live API models take precedence (they're always current).
+// Curated models fill gaps: providers with no public API (Azure, xAI, Bedrock)
+// plus enriched metadata (pricing, deprecation dates, replacement models) that
+// the live APIs don't expose.
+
+async function buildModels(): Promise<ModelData[]> {
+  const [openaiLive, anthropicLive, geminiLive] = await Promise.allSettled([
+    fetchOpenAIModels(),
+    fetchAnthropicModels(),
+    fetchGeminiModels(),
+  ]);
+
+  const liveModels: Omit<ModelData, 'lastUpdated' | 'daysUntilDeprecation'>[] = [
+    ...(openaiLive.status === 'fulfilled' ? openaiLive.value : []),
+    ...(anthropicLive.status === 'fulfilled' ? anthropicLive.value : []),
+    ...(geminiLive.status === 'fulfilled' ? geminiLive.value : []),
+  ];
+
+  const curated = buildCuratedModels();
+
+  // Build a map of curated models by id for enrichment lookup
+  const curatedById = new Map(curated.map(m => [m.id, m]));
+  // Build a map from live models for deduplication
+  const liveById = new Map(liveModels.map(m => [m.id, m]));
+
+  // Enrich live models with curated metadata (pricing, deprecation, replacement)
+  const enrichedLive = liveModels.map(live => {
+    const extra = curatedById.get(live.id);
+    if (!extra) return live;
+    return {
+      ...live,
+      // Keep live name/capabilities but layer in curated enrichment fields
+      deprecationDate: extra.deprecationDate ?? live.deprecationDate,
+      replacementModel: extra.replacementModel ?? live.replacementModel,
+      inputPricing: extra.inputPricing ?? live.inputPricing,
+      outputPricing: extra.outputPricing ?? live.outputPricing,
+      contextWindow: live.contextWindow ?? extra.contextWindow,
+      maxOutputTokens: live.maxOutputTokens ?? extra.maxOutputTokens,
+      notes: extra.notes ?? live.notes,
+      status: extra.status,
+    };
+  });
+
+  // Add curated-only models (Azure, xAI, Bedrock, plus any not yet in live API)
+  const curatedOnly = curated.filter(m => !liveById.has(m.id));
+
+  const all = [...enrichedLive, ...curatedOnly];
+
+  return all.map(m => ({
     ...m,
     lastUpdated: NOW,
     daysUntilDeprecation: daysUntil(m.deprecationDate),
@@ -292,7 +457,7 @@ export async function scrapeAndStoreAllData(): Promise<void> {
   await kv.set('scrape_status', { status: 'running', startedAt: NOW });
 
   try {
-    const models = buildModels();
+    const models = await buildModels();
     const deprecations = buildDeprecations(models);
     const alerts = generateAlerts(models, deprecations);
 

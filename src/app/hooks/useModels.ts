@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 import { llmModels } from '../data/mockData';
 
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-6d10c21b`;
+const API_BASE = `https://${projectId}.supabase.co/functions/v1/server`;
 
 export interface Model {
   id: string;
@@ -118,8 +118,18 @@ export function useModels() {
       const deprecationsData: DeprecationsResponse = await deprecationsRes.json();
       const alertsData: AlertsResponse = await alertsRes.json();
 
+      // Merge API data with local mock — API wins on conflict, mock fills gaps
+      // This ensures locally curated models always appear even if the deployed
+      // Edge Function hasn't been updated yet.
+      const mockModels = buildMockFallback();
+      const apiById = new Map(modelsData.models.map(m => [m.id, m]));
+      const allIds = new Set([...apiById.keys(), ...mockModels.map(m => m.id)]);
+      const merged = Array.from(allIds).map(id =>
+        apiById.get(id) ?? mockModels.find(m => m.id === id)!
+      );
+
       // Process models and add deprecation info
-      const processedModels = modelsData.models.map(model => {
+      const processedModels = merged.map(model => {
         if (model.deprecationDate) {
           const depDate = new Date(model.deprecationDate);
           const now = new Date();
