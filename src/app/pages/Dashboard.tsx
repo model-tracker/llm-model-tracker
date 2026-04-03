@@ -9,6 +9,18 @@ import { Skeleton } from "../components/ui/skeleton";
 import { useModels } from "../hooks/useModels";
 import type { LLMModel } from "../data/mockData";
 
+function getProviderDocsUrl(provider: string): string {
+  const urls: Record<string, string> = {
+    'OpenAI': 'https://platform.openai.com/docs/deprecations',
+    'Anthropic': 'https://docs.anthropic.com/en/docs/about-claude/models/overview',
+    'Google': 'https://ai.google.dev/gemini-api/docs/models',
+    'Azure OpenAI': 'https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/model-retirements',
+    'Amazon Bedrock': 'https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html',
+    'xAI': 'https://docs.x.ai/docs',
+  };
+  return urls[provider] || 'https://platform.openai.com/docs/models';
+}
+
 export function Dashboard() {
   const { models, isLoading, lastUpdated, refetch, triggerScrape } = useModels();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -207,7 +219,7 @@ export function Dashboard() {
                     </div>
                   )}
                   
-                  <Button size="sm" variant="outline" className="w-full mt-2">
+                  <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => window.open(model.sourceUrl || getProviderDocsUrl(model.provider), '_blank')}>
                     View Migration Guide
                   </Button>
                 </CardContent>
@@ -284,7 +296,7 @@ export function Dashboard() {
       <section>
         <h2 className="text-xl font-semibold mb-4">All Models</h2>
         <ModelsTable
-          models={models.map(m => ({ ...m, status: (m.status.charAt(0).toUpperCase() + m.status.slice(1)) as LLMModel['status'] }))}
+          models={models.map(m => ({ ...m, provider: m.provider as LLMModel['provider'], status: (m.status.charAt(0).toUpperCase() + m.status.slice(1)) as LLMModel['status'], capabilities: m.capabilities as LLMModel['capabilities'] }))}
           isLoading={isLoading}
         />
       </section>
