@@ -28,7 +28,7 @@ export function Navigation() {
           {/* Logo and Menu */}
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2">
-              <div className="text-2xl">🎯</div>
+              <img src="/llm_tracker_logo.png" alt="LLM Tracker" className="h-8 w-8 object-contain" />
               <span className="font-semibold text-lg">LLM Tracker</span>
             </Link>
             
