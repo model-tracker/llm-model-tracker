@@ -6,6 +6,9 @@ import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 import { Bell, Check } from "lucide-react";
 import { toast } from "sonner";
+import { projectId, publicAnonKey } from '../../../utils/supabase/info';
+
+const API_BASE = `https://${projectId}.supabase.co/functions/v1/server`;
 
 interface AlertSettings {
   deprecation1Month: boolean;
@@ -19,19 +22,51 @@ export function Alerts() {
     deprecation1Month: true,
     deprecation1Week: true,
     newModels: true,
-    email: "user@example.com"
+    email: ""
   });
-  
+
   const [isSaving, setIsSaving] = useState(false);
-  
-  const handleSave = () => {
+
+  const handleSave = async () => {
+    if (!settings.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settings.email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     setIsSaving(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const res = await fetch(`${API_BASE}/subscribe`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: settings.email,
+          alertNewModels: settings.newModels,
+          alert60Days: settings.deprecation1Month,
+          alert7Days: settings.deprecation1Week,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to subscribe");
+      toast.success("You're subscribed! You'll receive email alerts based on your preferences.");
+    } catch {
+      toast.error("Failed to save preferences. Please try again.");
+    } finally {
       setIsSaving(false);
-      toast.success("Alert preferences saved successfully!");
-    }, 1000);
+    }
+  };
+
+  const handleUnsubscribe = async () => {
+    if (!settings.email) { toast.error("Enter your email to unsubscribe"); return; }
+    try {
+      await fetch(`${API_BASE}/unsubscribe/${encodeURIComponent(settings.email)}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${publicAnonKey}` },
+      });
+      toast.success("You've been unsubscribed.");
+    } catch {
+      toast.error("Failed to unsubscribe. Please try again.");
+    }
   };
   
   return (
@@ -136,13 +171,20 @@ export function Alerts() {
             </div>
             
             {/* Save Button */}
-            <div className="pt-4">
-              <Button 
+            <div className="pt-4 flex gap-3">
+              <Button
                 onClick={handleSave}
                 disabled={isSaving}
                 className="w-full md:w-auto"
               >
-                {isSaving ? "Saving..." : "Save Preferences"}
+                {isSaving ? "Saving..." : "Subscribe"}
+              </Button>
+              <Button
+                onClick={handleUnsubscribe}
+                variant="outline"
+                className="w-full md:w-auto"
+              >
+                Unsubscribe
               </Button>
             </div>
           </CardContent>

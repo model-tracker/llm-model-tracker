@@ -454,7 +454,7 @@ export async function scrapeAndStoreAllData(): Promise<void> {
   console.log('=== Starting data refresh ===');
   const start = Date.now();
 
-  await kv.set('scrape_status', { status: 'running', startedAt: NOW });
+  try { await kv.set('scrape_status', { status: 'running', startedAt: NOW }); } catch (_) { /* KV unavailable */ }
 
   try {
     const models = await buildModels();
@@ -464,29 +464,33 @@ export async function scrapeAndStoreAllData(): Promise<void> {
     // Write to relational tables
     await upsertToTables(models, deprecations, alerts);
 
-    // Also write to KV for backward compatibility
-    await Promise.all([
-      kv.set('llm_models', models),
-      kv.set('llm_models_last_updated', NOW),
-      kv.set('llm_deprecations', deprecations),
-      kv.set('llm_deprecations_last_updated', NOW),
-      kv.set('llm_alerts', alerts),
-    ]);
+    // Also write to KV for backward compatibility (best-effort)
+    try {
+      await Promise.all([
+        kv.set('llm_models', models),
+        kv.set('llm_models_last_updated', NOW),
+        kv.set('llm_deprecations', deprecations),
+        kv.set('llm_deprecations_last_updated', NOW),
+        kv.set('llm_alerts', alerts),
+      ]);
+    } catch (_) { /* KV unavailable, skip */ }
 
     const duration = ((Date.now() - start) / 1000).toFixed(2);
-    await kv.set('scrape_status', {
-      status: 'completed',
-      lastRun: NOW,
-      duration: `${duration}s`,
-      modelsCount: models.length,
-      deprecationsCount: deprecations.length,
-      alertsCount: alerts.length,
-    });
+    try {
+      await kv.set('scrape_status', {
+        status: 'completed',
+        lastRun: NOW,
+        duration: `${duration}s`,
+        modelsCount: models.length,
+        deprecationsCount: deprecations.length,
+        alertsCount: alerts.length,
+      });
+    } catch (_) { /* KV unavailable, skip */ }
 
     console.log(`=== Refresh done in ${duration}s — ${models.length} models, ${deprecations.length} upcoming deprecations, ${alerts.length} alerts ===`);
   } catch (err) {
     console.error('Data refresh failed:', err);
-    await kv.set('scrape_status', { status: 'failed', lastRun: NOW, error: (err as Error).message });
+    try { await kv.set('scrape_status', { status: 'failed', lastRun: NOW, error: (err as Error).message }); } catch (_) { /* KV unavailable */ }
     throw err;
   }
 }
