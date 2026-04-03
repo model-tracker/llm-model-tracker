@@ -69,7 +69,7 @@ const CustomBarTooltip = ({ active, payload }: TooltipProps<ValueType, NameType>
   return null;
 };
 
-// Provider emoji mapping
+// Provider emoji mapping (used in tooltip only)
 function getProviderEmoji(provider: string): string {
   const emojiMap: Record<string, string> = {
     'OpenAI': '🤖',
@@ -80,6 +80,19 @@ function getProviderEmoji(provider: string): string {
     'Amazon Bedrock': '📦'
   };
   return emojiMap[provider] || '🔮';
+}
+
+// Provider logo mapping
+function getProviderLogo(provider: string): string {
+  const logoMap: Record<string, string> = {
+    'OpenAI': '/logos/openai.png',
+    'Anthropic': '/logos/anthropic.png',
+    'Google': '/logos/google.png',
+    'Azure OpenAI': '/logos/azure.png',
+    'xAI': '/logos/xai.png',
+    'Amazon Bedrock': '/logos/amazon.png',
+  };
+  return logoMap[provider] || '';
 }
 
 // Provider color mapping
@@ -177,23 +190,33 @@ export const ProviderActivityChart = ({ data }: ProviderActivityChartProps) => {
     fill: getProviderColor(item.provider)
   }));
 
-  // Custom X-Axis Tick with Emoji
+  // Custom X-Axis Tick with logo + label
   const CustomXAxisTick = (props: any) => {
     const { x, y, payload } = props;
-    const emoji = getProviderEmoji(payload.value);
-    
+    const logo = getProviderLogo(payload.value);
+    const label = payload.value === 'Azure OpenAI' ? 'Azure' :
+                  payload.value === 'Amazon Bedrock' ? 'Bedrock' : payload.value;
+
     return (
       <g transform={`translate(${x},${y})`}>
+        {logo && (
+          <image
+            href={logo}
+            x={-10}
+            y={4}
+            width={20}
+            height={20}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        )}
         <text
           x={0}
-          y={0}
-          dy={16}
+          y={30}
           textAnchor="middle"
           fill="#4b5563"
-          fontSize={12}
+          fontSize={11}
         >
-          <tspan x={0} dy={0}>{emoji}</tspan>
-          <tspan x={0} dy={16} fontSize={11}>{payload.value}</tspan>
+          {label}
         </text>
       </g>
     );
@@ -203,21 +226,20 @@ export const ProviderActivityChart = ({ data }: ProviderActivityChartProps) => {
     <ResponsiveContainer width="100%" height={300}>
       <BarChart
         data={validData}
-        margin={{ top: 20, right: 20, left: -20, bottom: 40 }}
+        margin={{ top: 20, right: 20, left: -20, bottom: 5 }}
       >
-        <CartesianGrid 
-          strokeDasharray="3 3" 
+        <CartesianGrid
+          strokeDasharray="3 3"
           stroke="#e5e7eb"
           vertical={false}
         />
         <XAxis
           dataKey="provider"
           stroke="#9ca3af"
-          fontSize={12}
           tickLine={false}
           axisLine={{ stroke: '#e5e7eb' }}
           tick={<CustomXAxisTick />}
-          height={80}
+          height={50}
         />
         <YAxis
           stroke="#9ca3af"
