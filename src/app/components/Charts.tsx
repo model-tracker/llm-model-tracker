@@ -82,18 +82,6 @@ function getProviderEmoji(provider: string): string {
   return emojiMap[provider] || '🔮';
 }
 
-// Provider logo mapping
-function getProviderLogo(provider: string): string {
-  const logoMap: Record<string, string> = {
-    'OpenAI': '/logos/openai.png',
-    'Anthropic': '/logos/anthropic.png',
-    'Google': '/logos/google.png',
-    'Azure OpenAI': '/logos/azure.png',
-    'xAI': '/logos/xai.png',
-    'Amazon Bedrock': '/logos/amazon.png',
-  };
-  return logoMap[provider] || '';
-}
 
 // Provider color mapping
 function getProviderColor(provider: string): string {
@@ -190,33 +178,28 @@ export const ProviderActivityChart = ({ data }: ProviderActivityChartProps) => {
     fill: getProviderColor(item.provider)
   }));
 
-  // Custom X-Axis Tick with logo + label
+  // Shorten long provider names for X-axis
+  const shortenProvider = (name: string) => {
+    const map: Record<string, string> = {
+      'Azure OpenAI': 'Azure',
+      'Amazon Bedrock': 'Bedrock',
+    };
+    return map[name] || name;
+  };
+
   const CustomXAxisTick = (props: any) => {
     const { x, y, payload } = props;
-    const logo = getProviderLogo(payload.value);
-    const label = payload.value === 'Azure OpenAI' ? 'Azure' :
-                  payload.value === 'Amazon Bedrock' ? 'Bedrock' : payload.value;
-
     return (
       <g transform={`translate(${x},${y})`}>
-        {logo && (
-          <image
-            href={logo}
-            x={-10}
-            y={4}
-            width={20}
-            height={20}
-            preserveAspectRatio="xMidYMid meet"
-          />
-        )}
         <text
           x={0}
-          y={30}
+          y={0}
+          dy={16}
           textAnchor="middle"
           fill="#4b5563"
           fontSize={11}
         >
-          {label}
+          {shortenProvider(payload.value)}
         </text>
       </g>
     );
@@ -239,7 +222,7 @@ export const ProviderActivityChart = ({ data }: ProviderActivityChartProps) => {
           tickLine={false}
           axisLine={{ stroke: '#e5e7eb' }}
           tick={<CustomXAxisTick />}
-          height={50}
+          height={36}
         />
         <YAxis
           stroke="#9ca3af"
