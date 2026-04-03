@@ -1,6 +1,5 @@
 import { Link, useLocation } from "react-router";
-import { Search, Menu, X } from "lucide-react";
-import { Input } from "./ui/input";
+import { Menu, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
 
@@ -49,15 +48,6 @@ export function Navigation() {
           
           {/* Right Side */}
           <div className="flex items-center gap-3">
-            <div className="relative hidden lg:block">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <Input
-                type="search"
-                placeholder="Search models..."
-                className="pl-9 w-[300px] h-9"
-              />
-            </div>
-            
             {/* Mobile Menu Button */}
             <Button 
               variant="ghost" 
