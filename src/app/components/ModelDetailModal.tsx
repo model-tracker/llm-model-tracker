@@ -108,7 +108,11 @@ export function ModelDetailModal({ model, open, onOpenChange }: ModelDetailModal
                   </div>
                   <ArrowRight className="h-5 w-5 text-indigo-600" />
                 </div>
-                <Button className="mt-4 w-full" variant="outline">
+                <Button
+                  className="mt-4 w-full"
+                  variant="outline"
+                  onClick={() => window.open(model.sourceUrl, '_blank')}
+                >
                   View Migration Guide
                 </Button>
               </div>

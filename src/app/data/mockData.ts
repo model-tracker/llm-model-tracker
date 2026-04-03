@@ -25,6 +25,7 @@ export interface LLMModel {
   outputPricing?: string;
   notes?: string;
   daysUntilDeprecation?: number;
+  sourceUrl?: string;
 }
 
 function daysUntil(dateStr?: string): number | undefined {
