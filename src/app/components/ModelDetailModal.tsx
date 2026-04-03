@@ -108,15 +108,13 @@ export function ModelDetailModal({ model, open, onOpenChange }: ModelDetailModal
                   </div>
                   <ArrowRight className="h-5 w-5 text-indigo-600" />
                 </div>
-                {model.sourceUrl && (
-                  <Button
-                    className="mt-4 w-full"
-                    variant="outline"
-                    onClick={() => window.open(model.sourceUrl, '_blank')}
-                  >
-                    View Migration Guide
-                  </Button>
-                )}
+                <Button
+                  className="mt-4 w-full"
+                  variant="outline"
+                  onClick={() => window.open(model.sourceUrl || getProviderDocsUrl(model.provider), '_blank')}
+                >
+                  View Migration Guide
+                </Button>
               </div>
             </div>
           )}
@@ -208,6 +206,18 @@ function StatusBadge({ status }: { status: LLMModel['status'] }) {
       {status}
     </Badge>
   );
+}
+
+function getProviderDocsUrl(provider: string): string {
+  const urls: Record<string, string> = {
+    'OpenAI': 'https://platform.openai.com/docs/deprecations',
+    'Anthropic': 'https://docs.anthropic.com/en/docs/about-claude/models/overview',
+    'Google': 'https://ai.google.dev/gemini-api/docs/models',
+    'Azure OpenAI': 'https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/model-retirements',
+    'Amazon Bedrock': 'https://docs.aws.amazon.com/bedrock/latest/userguide/model-ids.html',
+    'xAI': 'https://docs.x.ai/docs',
+  };
+  return urls[provider] || 'https://platform.openai.com/docs/models';
 }
 
 function getProviderEmoji(provider: string): string {
