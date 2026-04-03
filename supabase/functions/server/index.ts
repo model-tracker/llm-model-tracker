@@ -229,7 +229,7 @@ app.post("/send-alerts", async (c) => {
           const days = alert.message.match(/in (\d+) days/)?.[1];
           const d = days ? parseInt(days) : 999;
           if (sub.alert_7_days && d <= 7) return true;
-          if (sub.alert_60_days && d <= 30) return true;
+          if (sub.alert_60_days && d <= 60) return true;
         }
         return false;
       });

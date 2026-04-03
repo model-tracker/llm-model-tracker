@@ -28,7 +28,7 @@ export function ModelDetailModal({ model, open, onOpenChange }: ModelDetailModal
             <div>
               <DialogTitle className="text-2xl">{model.name}</DialogTitle>
               <DialogDescription className="mt-2 flex items-center gap-2">
-                <span className="text-2xl">{getProviderEmoji(model.provider)}</span>
+                <img src={getProviderLogo(model.provider)} alt={model.provider} className="h-8 w-8 object-contain" />
                 <span>{model.provider}</span>
               </DialogDescription>
             </div>
@@ -220,16 +220,16 @@ function getProviderDocsUrl(provider: string): string {
   return urls[provider] || 'https://platform.openai.com/docs/models';
 }
 
-function getProviderEmoji(provider: string): string {
-  const emojiMap: Record<string, string> = {
-    'OpenAI': '🤖',
-    'Anthropic': '🧠',
-    'Google': '✨',
-    'Azure OpenAI': '☁️',
-    'xAI': '⚡',
-    'Amazon Bedrock': '📦'
+function getProviderLogo(provider: string): string {
+  const logoMap: Record<string, string> = {
+    'OpenAI': '/logos/openai.png',
+    'Anthropic': '/logos/anthropic.png',
+    'Google': '/logos/google.png',
+    'Azure OpenAI': '/logos/azure.png',
+    'xAI': '/logos/xai.png',
+    'Amazon Bedrock': '/logos/amazon.png',
   };
-  return emojiMap[provider] || '🔮';
+  return logoMap[provider] || '/logos/openai.png';
 }
 
 function formatDate(dateString: string): string {

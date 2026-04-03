@@ -223,7 +223,7 @@ export function ModelsTable({ models: modelsProp, isLoading = false }: ModelsTab
                         <TableCell className="font-medium">{model.name}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <span>{getProviderEmoji(model.provider)}</span>
+                            <img src={getProviderEmoji(model.provider)} alt={model.provider} className="h-5 w-5 object-contain" />
                             <span>{model.provider}</span>
                           </div>
                         </TableCell>
@@ -362,15 +362,15 @@ function TableSkeleton() {
 }
 
 function getProviderEmoji(provider: string): string {
-  const emojiMap: Record<string, string> = {
-    'OpenAI': '🤖',
-    'Anthropic': '🧠',
-    'Google': '✨',
-    'Azure OpenAI': '☁️',
-    'xAI': '⚡',
-    'Amazon Bedrock': '📦'
+  const logoMap: Record<string, string> = {
+    'OpenAI': '/logos/openai.png',
+    'Anthropic': '/logos/anthropic.png',
+    'Google': '/logos/google.png',
+    'Azure OpenAI': '/logos/azure.png',
+    'xAI': '/logos/xai.png',
+    'Amazon Bedrock': '/logos/amazon.png',
   };
-  return emojiMap[provider] || '🔮';
+  return logoMap[provider] || '';
 }
 
 function formatDate(dateString: string): string {

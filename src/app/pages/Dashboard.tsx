@@ -196,7 +196,7 @@ export function Dashboard() {
                       <CardTitle className="text-lg">{model.name}</CardTitle>
                       <CardDescription className="mt-1">{model.provider}</CardDescription>
                     </div>
-                    <span className="text-2xl">{getProviderEmoji(model.provider)}</span>
+                    <img src={getProviderEmoji(model.provider)} alt={model.provider} className="h-8 w-8 object-contain" />
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -255,7 +255,7 @@ export function Dashboard() {
                         <CardTitle className="text-lg">{model.name}</CardTitle>
                         <CardDescription className="mt-1">{model.provider}</CardDescription>
                       </div>
-                      <span className="text-2xl">{getProviderEmoji(model.provider)}</span>
+                      <img src={getProviderEmoji(model.provider)} alt={model.provider} className="h-8 w-8 object-contain" />
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -357,15 +357,15 @@ function DashboardSkeleton() {
 }
 
 function getProviderEmoji(provider: string): string {
-  const emojiMap: Record<string, string> = {
-    'OpenAI': '🤖',
-    'Anthropic': '🧠',
-    'Google': '✨',
-    'Azure OpenAI': '☁️',
-    'xAI': '⚡',
-    'Amazon Bedrock': '📦'
+  const logoMap: Record<string, string> = {
+    'OpenAI': '/logos/openai.png',
+    'Anthropic': '/logos/anthropic.png',
+    'Google': '/logos/google.png',
+    'Azure OpenAI': '/logos/azure.png',
+    'xAI': '/logos/xai.png',
+    'Amazon Bedrock': '/logos/amazon.png',
   };
-  return emojiMap[provider] || '🔮';
+  return logoMap[provider] || '';
 }
 
 function formatDate(dateString: string): string {
