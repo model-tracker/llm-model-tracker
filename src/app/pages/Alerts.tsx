@@ -5,6 +5,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Switch } from "../components/ui/switch";
 import { Bell, Check } from "lucide-react";
+import { Badge } from "../components/ui/badge";
 import { toast } from "sonner";
 import { projectId, publicAnonKey } from '../../../utils/supabase/info';
 
@@ -153,8 +154,11 @@ export function Alerts() {
             
             {/* Email Input */}
             <div className="space-y-4 pt-4 border-t">
-              <h3 className="font-semibold text-sm text-gray-700">Notification Email</h3>
-              
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-sm text-gray-700">Notification Email</h3>
+                <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-xs">Coming Soon</Badge>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -163,9 +167,11 @@ export function Alerts() {
                   value={settings.email}
                   onChange={(e) => setSettings({ ...settings, email: e.target.value })}
                   placeholder="your.email@example.com"
+                  disabled
+                  className="opacity-50 cursor-not-allowed"
                 />
-                <p className="text-xs text-gray-600">
-                  We'll send notifications to this email address
+                <p className="text-xs text-gray-500">
+                  Custom email delivery is coming soon. Stay tuned!
                 </p>
               </div>
             </div>
@@ -173,16 +179,15 @@ export function Alerts() {
             {/* Save Button */}
             <div className="pt-4 flex gap-3">
               <Button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="w-full md:w-auto"
+                disabled
+                className="w-full md:w-auto opacity-50 cursor-not-allowed"
               >
-                {isSaving ? "Saving..." : "Subscribe"}
+                Subscribe
               </Button>
               <Button
-                onClick={handleUnsubscribe}
+                disabled
                 variant="outline"
-                className="w-full md:w-auto"
+                className="w-full md:w-auto opacity-50 cursor-not-allowed"
               >
                 Unsubscribe
               </Button>
