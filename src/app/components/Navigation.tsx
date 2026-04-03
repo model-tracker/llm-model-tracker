@@ -1,8 +1,7 @@
 import { Link, useLocation } from "react-router";
-import { Bell, Search, User, Menu, X } from "lucide-react";
+import { Search, Menu, X } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Avatar, AvatarFallback } from "./ui/avatar";
 import { useState } from "react";
 
 export function Navigation() {
@@ -58,17 +57,6 @@ export function Navigation() {
                 className="pl-9 w-[300px] h-9"
               />
             </div>
-            
-            <Button variant="ghost" size="icon" className="relative hidden sm:flex">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500"></span>
-            </Button>
-            
-            <Avatar className="h-8 w-8 hidden sm:flex">
-              <AvatarFallback className="bg-indigo-100 text-indigo-700">
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
             
             {/* Mobile Menu Button */}
             <Button 
