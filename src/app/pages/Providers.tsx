@@ -6,8 +6,7 @@ import { Input } from "../components/ui/input";
 import { providers } from "../data/mockData";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/sheet";
 import { ArrowRight, Building2, Search, ChevronDown, ChevronUp } from "lucide-react";
-import { Skeleton } from "../components/ui/skeleton";
-import { useModels, Model } from "../hooks/useModels";
+import { useModels } from "../hooks/useModels";
 
 export function Providers() {
   const { models } = useModels();
@@ -142,119 +141,123 @@ export function Providers() {
 
       {/* Slide-out Sheet */}
       <Sheet open={!!selectedProvider} onOpenChange={(open) => { if (!open) setSelectedProvider(null); }}>
-        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-          <SheetHeader className="mb-4">
+        <SheetContent className="w-full sm:max-w-xl flex flex-col p-0 gap-0">
+          {/* Header */}
+          <SheetHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
             <div className="flex items-center gap-3">
               {selectedProviderData && (
                 <img src={selectedProviderData.logo} alt={selectedProviderData.name} className="h-8 w-8 object-contain" />
               )}
-              <SheetTitle>{selectedProviderData?.name} Models</SheetTitle>
+              <SheetTitle className="text-lg">{selectedProviderData?.name} Models</SheetTitle>
             </div>
           </SheetHeader>
 
-          {/* Search */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search models..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
+          {/* Search + Count */}
+          <div className="px-6 pt-4 pb-3 flex-shrink-0 border-b bg-white">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search models..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="text-xs text-gray-500 mt-2">{filteredModels.length} model{filteredModels.length !== 1 ? 's' : ''}</div>
           </div>
 
-          <div className="text-sm text-gray-500 mb-3">{filteredModels.length} models</div>
-
-          {/* Model List */}
-          <div className="space-y-2">
-            {filteredModels.map((model) => (
-              <div key={model.id} className="border rounded-lg overflow-hidden">
-                <button
-                  className="w-full flex items-center justify-between p-3 hover:bg-gray-50 text-left"
-                  onClick={() => setExpandedModel(expandedModel === model.id ? null : model.id)}
-                >
-                  <div className="flex items-center gap-3">
+          {/* Model List — scrollable */}
+          <div className="overflow-y-auto flex-1">
+            <div className="divide-y divide-gray-100">
+              {filteredModels.map((model) => (
+                <div key={model.id}>
+                  <button
+                    className="w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 text-left transition-colors"
+                    onClick={() => setExpandedModel(expandedModel === model.id ? null : model.id)}
+                  >
                     <div>
-                      <div className="font-medium text-sm">{model.name}</div>
-                      <div className="text-xs text-gray-500">{model.releaseDate}</div>
+                      <div className="font-medium text-sm text-gray-900">{model.name}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{model.releaseDate}</div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={
-                      model.status === 'active' ? 'bg-green-100 text-green-700' :
-                      model.status === 'deprecated' ? 'bg-red-100 text-red-700' :
-                      'bg-blue-100 text-blue-700'
-                    }>
-                      {model.status.charAt(0).toUpperCase() + model.status.slice(1)}
-                    </Badge>
-                    {expandedModel === model.id ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
-                  </div>
-                </button>
+                    <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+                      <Badge className={
+                        model.status === 'active' ? 'bg-green-100 text-green-700 hover:bg-green-100' :
+                        model.status === 'deprecated' ? 'bg-red-100 text-red-700 hover:bg-red-100' :
+                        'bg-blue-100 text-blue-700 hover:bg-blue-100'
+                      }>
+                        {model.status.charAt(0).toUpperCase() + model.status.slice(1)}
+                      </Badge>
+                      {expandedModel === model.id
+                        ? <ChevronUp className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        : <ChevronDown className="h-4 w-4 text-gray-400 flex-shrink-0" />}
+                    </div>
+                  </button>
 
-                {expandedModel === model.id && (
-                  <div className="border-t p-3 bg-gray-50 space-y-2 text-sm">
-                    {model.inputPricing && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Input Pricing</span>
-                        <span className="font-medium">{model.inputPricing}</span>
-                      </div>
-                    )}
-                    {model.outputPricing && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Output Pricing</span>
-                        <span className="font-medium">{model.outputPricing}</span>
-                      </div>
-                    )}
-                    {model.contextWindow && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Context Window</span>
-                        <span className="font-medium">{model.contextWindow.toLocaleString()} tokens</span>
-                      </div>
-                    )}
-                    {model.maxOutputTokens && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Max Output</span>
-                        <span className="font-medium">{model.maxOutputTokens.toLocaleString()} tokens</span>
-                      </div>
-                    )}
-                    {model.deprecationDate && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Deprecation Date</span>
-                        <span className="font-medium text-amber-600">{model.deprecationDate}</span>
-                      </div>
-                    )}
-                    {model.replacementModel && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Replacement</span>
-                        <span className="font-medium text-indigo-600">{model.replacementModel}</span>
-                      </div>
-                    )}
-                    {model.capabilities?.length > 0 && (
-                      <div>
-                        <span className="text-gray-500">Capabilities</span>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {model.capabilities.map(cap => (
-                            <Badge key={cap} variant="outline" className="text-xs">{cap}</Badge>
-                          ))}
+                  {expandedModel === model.id && (
+                    <div className="px-6 py-4 bg-gray-50/80 border-t border-gray-100 space-y-3 text-sm">
+                      {model.inputPricing && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Input Pricing</span>
+                          <span className="font-medium text-gray-900">{model.inputPricing}</span>
                         </div>
-                      </div>
-                    )}
-                    {model.notes && (
-                      <div className="text-gray-500 italic text-xs">{model.notes}</div>
-                    )}
-                    {model.sourceUrl && (
-                      <Button size="sm" variant="outline" className="w-full mt-2" onClick={() => window.open(model.sourceUrl, '_blank')}>
-                        View Docs
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                      )}
+                      {model.outputPricing && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Output Pricing</span>
+                          <span className="font-medium text-gray-900">{model.outputPricing}</span>
+                        </div>
+                      )}
+                      {model.contextWindow && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Context Window</span>
+                          <span className="font-medium text-gray-900">{model.contextWindow.toLocaleString()} tokens</span>
+                        </div>
+                      )}
+                      {model.maxOutputTokens && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Max Output</span>
+                          <span className="font-medium text-gray-900">{model.maxOutputTokens.toLocaleString()} tokens</span>
+                        </div>
+                      )}
+                      {model.deprecationDate && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Deprecation Date</span>
+                          <span className="font-medium text-amber-600">{model.deprecationDate}</span>
+                        </div>
+                      )}
+                      {model.replacementModel && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Replacement</span>
+                          <span className="font-medium text-indigo-600">{model.replacementModel}</span>
+                        </div>
+                      )}
+                      {model.capabilities?.length > 0 && (
+                        <div className="space-y-1.5">
+                          <span className="text-gray-500">Capabilities</span>
+                          <div className="flex flex-wrap gap-1">
+                            {model.capabilities.map(cap => (
+                              <Badge key={cap} variant="outline" className="text-xs">{cap}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {model.notes && (
+                        <div className="text-gray-400 italic text-xs pt-1">{model.notes}</div>
+                      )}
+                      {model.sourceUrl && (
+                        <Button size="sm" variant="outline" className="w-full mt-1" onClick={() => window.open(model.sourceUrl, '_blank')}>
+                          View Docs
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
 
-            {filteredModels.length === 0 && (
-              <div className="text-center text-gray-500 py-8">No models found</div>
-            )}
+              {filteredModels.length === 0 && (
+                <div className="text-center text-gray-500 py-12 px-6">No models found</div>
+              )}
+            </div>
           </div>
         </SheetContent>
       </Sheet>
