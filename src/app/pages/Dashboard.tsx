@@ -248,7 +248,7 @@ export function Dashboard() {
           <div className="relative">
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
               {newReleases.map((model) => (
-                <Card key={model.id} className="min-w-[320px] border-green-200">
+                <Card key={model.id} className="min-w-[320px] border-green-200 flex flex-col">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
@@ -258,12 +258,16 @@ export function Dashboard() {
                       <img src={getProviderEmoji(model.provider)} alt={model.provider} className="h-8 w-8 object-contain" />
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="flex flex-col flex-1 space-y-3">
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <Calendar className="h-4 w-4" />
                       <span>Released {formatDate(model.releaseDate)}</span>
                     </div>
-                    
+
+                    {model.notes && (
+                      <p className="text-sm text-gray-600 line-clamp-2">{model.notes}</p>
+                    )}
+
                     <div>
                       <div className="text-xs text-gray-600 mb-2">Capabilities</div>
                       <div className="flex flex-wrap gap-1">
@@ -274,10 +278,19 @@ export function Dashboard() {
                         ))}
                       </div>
                     </div>
-                    
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100 w-fit">
                       New
                     </Badge>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full mt-auto"
+                      onClick={() => window.open(model.sourceUrl || getProviderDocsUrl(model.provider), '_blank')}
+                    >
+                      Learn More
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
