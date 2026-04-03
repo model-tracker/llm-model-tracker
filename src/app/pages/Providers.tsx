@@ -67,7 +67,7 @@ export function Providers() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-4xl">{provider.logo}</div>
+                    <img src={provider.logo} alt={provider.name} className="h-10 w-10 object-contain" />
                     <div>
                       <CardTitle className="text-xl">{provider.name}</CardTitle>
                       <CardDescription className="mt-1">
