@@ -22,7 +22,7 @@ import { llmModels, LLMModel } from "../data/mockData";
 import { Search, ArrowUpDown, Filter, Package, AlertCircle } from "lucide-react";
 
 interface ModelsTableProps {
-  models?: LLMModel[];
+  models?: (LLMModel & { sourceUrl?: string })[];
   isLoading?: boolean;
 }
 import { Skeleton } from "./ui/skeleton";

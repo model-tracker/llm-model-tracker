@@ -296,7 +296,7 @@ export function Dashboard() {
       <section>
         <h2 className="text-xl font-semibold mb-4">All Models</h2>
         <ModelsTable
-          models={models.map(m => ({ ...m, provider: m.provider as LLMModel['provider'], status: (m.status.charAt(0).toUpperCase() + m.status.slice(1)) as LLMModel['status'], capabilities: m.capabilities as LLMModel['capabilities'] }))}
+          models={models.map(m => ({ ...m, status: (m.status.charAt(0).toUpperCase() + m.status.slice(1)) as LLMModel['status'] })) as any}
           isLoading={isLoading}
         />
       </section>
